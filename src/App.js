@@ -6,7 +6,7 @@ function App() {
     <div className="App">
       <header className="App-header">
         <h1>¡React está bien configurado en mi servidor!</h1>
-        <p>Este es un ejemplo básico para verificar la configuración.</p>
+        <p>Este es un ejemplo básico para verificar la configuración test .</p>
       </header>
     </div>
   );
