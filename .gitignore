@@ -21,3 +21,13 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Ignorar configuraci¢n de WebStorm/IntelliJ
+.idea/
+
+# Ignorar archivos de despliegue locales
+deploy.sh
+
+# Ignorar node_modules (si a£n no est  en el .gitignore)
+node_modules/
+
