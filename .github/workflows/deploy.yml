@@ -24,7 +24,6 @@ jobs:
       - name: Construir aplicación
         run: npm run build
 
-      # Este paso se conecta al servidor para determinar el directorio de despliegue
       - name: Determinar carpeta de release en el servidor
         id: determine_release
         uses: appleboy/ssh-action@v0.1.5
@@ -48,10 +47,9 @@ jobs:
             fi
             # Crear la carpeta de release
             mkdir -p "$RELEASE_DIR"
-            # Imprimir el nombre del directorio para capturarlo como salida
-            echo "$RELEASE_DIR"
+            # Registrar la salida para usarla en otros pasos
+            echo "release_dir=$RELEASE_DIR" >> $GITHUB_OUTPUT
 
-      # Se utiliza el directorio determinado para subir el build
       - name: Subir archivos al servidor vía scp
         uses: appleboy/scp-action@v0.1.2
         with:
@@ -59,9 +57,8 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           source: "build/*"
-          target: "${{ steps.determine_release.outputs.stdout }}"
+          target: "${{ steps.determine_release.outputs.release_dir }}"
 
-      # Finalmente, se actualiza el symlink y se recarga Nginx
       - name: Actualizar symlink y recargar Nginx
         uses: appleboy/ssh-action@v0.1.5
         with:
@@ -69,7 +66,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            RELEASE_DIR="${{ steps.determine_release.outputs.stdout }}"
-            ln -sfn "$RELEASE_DIR" /var/www/react-app/current
+            latest_release="${{ steps.determine_release.outputs.release_dir }}"
+            ln -sfn "$latest_release" /var/www/react-app/current
             systemctl reload nginx
-            echo "Symlink actualizado a $RELEASE_DIR"
+            echo "Symlink actualizado a $latest_release"
