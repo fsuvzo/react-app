@@ -3,14 +3,14 @@ name: Deploy React App to Server
 on:
   push:
     branches:
-      - main  # Se ejecutar  solo cuando hagas push a main
+      - main  # Se ejecutará solo cuando hagas push a main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout c¢digo
+      - name: Checkout código
         uses: actions/checkout@v3
 
       - name: Instalar Node.js y dependencias
@@ -21,9 +21,12 @@ jobs:
       - name: Instalar dependencias
         run: npm install
 
-      - name: Construir aplicaci¢n
+      - name: Construir aplicación
         run: npm run build
-        
+
+      - name: Definir variable de carpeta de despliegue
+        run: echo "DEPLOY_DIR=/var/www/react-app/releases/release_$(date +'%Y-%m-%d_%H-%M-%S')" >> $GITHUB_ENV
+
       - name: Crear carpeta de despliegue en el servidor
         uses: appleboy/ssh-action@v0.1.5
         with:
@@ -31,25 +34,25 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            mkdir -p /var/www/react-app/releases/release_$(date +'%Y-%m-%d_%H-%M-%S')
+            mkdir -p $DEPLOY_DIR
+            echo "Carpeta creada en el servidor: $DEPLOY_DIR"
 
-      - name: Subir archivos al servidor v¡a rsync
+      - name: Subir archivos al servidor vía scp
         uses: appleboy/scp-action@v0.1.2
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           source: "build/*"
-          target: "/var/www/react-app/releases/release_$(date +'%Y-%m-%d_%H-%M-%S')"
+          target: "$DEPLOY_DIR"
 
-      - name: Cambiar symlink a la nueva versi¢n
+      - name: Cambiar symlink a la nueva versión
         uses: appleboy/ssh-action@v0.1.5
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            latest_release=$(ls -td /var/www/react-app/releases/* | head -1)
-            ln -sfn $latest_release /var/www/react-app/current
+            ln -sfn $DEPLOY_DIR /var/www/react-app/current
             systemctl reload nginx
-
+            echo "Despliegue actualizado: $DEPLOY_DIR"
