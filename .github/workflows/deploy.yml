@@ -3,53 +3,46 @@ name: Deploy React App to Server
 on:
   push:
     branches:
-      - main  # Se ejecuta solo cuando hagas push a main
+      - main  # Se ejecuta cuando hagas push a main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Descargamos el código del repositorio
       - name: Checkout código
         uses: actions/checkout@v3
 
-      - name: Instalar Node.js y dependencias
+      # 2. Configuramos Node.js
+      - name: Instalar Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
+      # 3. Instalamos dependencias y construimos la app
       - name: Instalar dependencias
         run: npm install
 
       - name: Construir aplicación
         run: npm run build
 
-      - name: Determinar carpeta de release en el servidor
-        id: determine_release
+      # 4. Definimos la carpeta de release con fecha + hora + segundos
+      - name: Definir carpeta de release
+        id: define_release
+        run: echo "RELEASE_DIR=release_$(date +'%Y-%m-%d_%H-%M-%S')" >> $GITHUB_ENV
+
+      # 5. Creamos la carpeta en el servidor
+      - name: Crear carpeta en el servidor
         uses: appleboy/ssh-action@v0.1.5
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            # Obtener la fecha actual en formato YYYY-MM-DD
-            release_date=$(date +'%Y-%m-%d')
-            base_release_dir="/var/www/react-app/releases/release_${release_date}"
-            # Si ya existe la carpeta base, se añade sufijo incremental
-            if [ -d "$base_release_dir" ]; then
-              i=1
-              while [ -d "${base_release_dir}_$i" ]; do
-                i=$((i+1))
-              done
-              RELEASE_DIR="${base_release_dir}_$i"
-            else
-              RELEASE_DIR="$base_release_dir"
-            fi
-            # Crear la carpeta de release
-            mkdir -p "$RELEASE_DIR"
-            # Registrar la salida para usarla en otros pasos
-            echo "release_dir=$RELEASE_DIR" >> $GITHUB_OUTPUT
+            mkdir -p /var/www/react-app/releases/${{ env.RELEASE_DIR }}
 
+      # 6. Subimos los archivos (build) al servidor
       - name: Subir archivos al servidor vía scp
         uses: appleboy/scp-action@v0.1.2
         with:
@@ -57,8 +50,9 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           source: "build/*"
-          target: "${{ steps.determine_release.outputs.release_dir }}"
+          target: "/var/www/react-app/releases/${{ env.RELEASE_DIR }}"
 
+      # 7. Actualizamos el symlink y recargamos Nginx
       - name: Actualizar symlink y recargar Nginx
         uses: appleboy/ssh-action@v0.1.5
         with:
@@ -66,7 +60,6 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            latest_release="${{ steps.determine_release.outputs.release_dir }}"
-            ln -sfn "$latest_release" /var/www/react-app/current
+            ln -sfn /var/www/react-app/releases/${{ env.RELEASE_DIR }} /var/www/react-app/current
             systemctl reload nginx
-            echo "Symlink actualizado a $latest_release"
+            echo "Despliegue realizado en: ${{ env.RELEASE_DIR }}"
