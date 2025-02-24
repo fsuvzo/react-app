@@ -1,38 +1,33 @@
-name: Deploy React App to Server
+name: Deploy React App
 
 on:
   push:
     branches:
-      - main  # Se ejecuta cuando hagas push a main
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Descargamos el código del repositorio
       - name: Checkout código
         uses: actions/checkout@v3
 
-      # 2. Configuramos Node.js
-      - name: Instalar Node.js
+      - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: 18
 
-      # 3. Instalamos dependencias y construimos la app
       - name: Instalar dependencias
         run: npm install
 
       - name: Construir aplicación
         run: npm run build
 
-      # 4. Definimos la carpeta de release con fecha + hora + segundos
       - name: Definir carpeta de release
         id: define_release
         run: echo "RELEASE_DIR=release_$(date +'%Y-%m-%d_%H-%M-%S')" >> $GITHUB_ENV
 
-      # 5. Creamos la carpeta en el servidor
       - name: Crear carpeta en el servidor
         uses: appleboy/ssh-action@v0.1.5
         with:
@@ -42,18 +37,17 @@ jobs:
           script: |
             mkdir -p /var/www/react-app/releases/${{ env.RELEASE_DIR }}
 
-      # 6. Subimos los archivos (build) al servidor
-      - name: Subir archivos al servidor vía scp
+      - name: Subir archivos al servidor
         uses: appleboy/scp-action@v0.1.2
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          source: "build/*"
+          source: "build"
           target: "/var/www/react-app/releases/${{ env.RELEASE_DIR }}"
+          strip_components: 1
 
-      # 7. Actualizamos el symlink y recargamos Nginx
-      - name: Actualizar symlink y recargar Nginx
+      - name: Actualizar symlink
         uses: appleboy/ssh-action@v0.1.5
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -62,4 +56,4 @@ jobs:
           script: |
             ln -sfn /var/www/react-app/releases/${{ env.RELEASE_DIR }} /var/www/react-app/current
             systemctl reload nginx
-            echo "Despliegue realizado en: ${{ env.RELEASE_DIR }}"
+            echo "Symlink apuntando a /var/www/react-app/releases/${{ env.RELEASE_DIR }}"
