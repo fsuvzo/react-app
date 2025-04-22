@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { User, Lock, Eye, EyeOff } from "lucide-react";
 import MarcaCVXR from "../components/MarcaCVXR";
+import videoFondo from "../assets/video-login.mp4";
 
 export default function Login() {
   const [usuario, setUsuario] = useState("");
@@ -51,7 +52,7 @@ export default function Login() {
             playsInline
             className="absolute inset-0 w-full h-full object-cover blur-sm scale-105"
         >
-          <source src="/src/assets/video-login.mp4" type="video/mp4" />
+          <source src={videoFondo} type="video/mp4"/>
         </video>
 
         <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
