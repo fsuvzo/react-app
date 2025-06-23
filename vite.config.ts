@@ -4,6 +4,7 @@ import svgr from "vite-plugin-svgr";
 import { fileURLToPath, URL } from "url";
 
 export default defineConfig({
+  base: "/", // <- ESTO ES CLAVE
   plugins: [
     react(),
     svgr({
