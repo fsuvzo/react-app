@@ -11,6 +11,8 @@ import Avatars from "./pages/UiElements/Avatars";
 import Buttons from "./pages/UiElements/Buttons";
 import LineChart from "./pages/Charts/LineChart";
 import BarChart from "./pages/Charts/BarChart";
+import ClientesPage from "./pages/Clientes/ClientesPage";
+import EquiposGPSPage from "@/pages/EquiposGPS/EquiposGPSPage";
 import Calendar from "./pages/Calendar";
 import BasicTables from "./pages/Tables/BasicTables";
 import FormElements from "./pages/Forms/FormElements";
@@ -36,7 +38,13 @@ export default function App() {
 function AppContent() {
   const { loading } = useAuth();
 
-  if (loading) return <Loader />;
+    if (loading) {
+        return (
+            <div className="h-screen flex items-center justify-center bg-white dark:bg-gray-900">
+                <Loader className="h-8 w-8 border-4" />
+            </div>
+        );
+    }
 
   return (
       <>
@@ -44,6 +52,8 @@ function AppContent() {
         <Routes>
           <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
             <Route index path="/home" element={<Home />} />
+              <Route path="/clientes" element={<ClientesPage />} />
+              <Route path="/equipo-gps" element={<EquiposGPSPage />} />
             <Route path="/profile" element={<UserProfiles />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/blank" element={<Blank />} />

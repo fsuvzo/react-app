@@ -1,0 +1,60 @@
+name: Deploy React App
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout c¢digo
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Instalar dependencias
+        run: npm install
+
+      - name: Construir aplicaci¢n
+        run: npm run build
+
+      - name: Definir carpeta de release
+        id: define_release
+        run: echo "RELEASE_DIR=release_$(date +'%Y-%m-%d_%H-%M-%S')" >> $GITHUB_ENV
+
+      - name: Crear carpeta en el servidor
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            mkdir -p /var/www/react-app/releases/${{ env.RELEASE_DIR }}
+
+      - name: Subir archivos al servidor
+        uses: appleboy/scp-action@v0.1.2
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "dist"
+          target: "/var/www/react-app/releases/${{ env.RELEASE_DIR }}"
+          strip_components: 1
+
+      - name: Actualizar symlink
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            ln -sfn /var/www/react-app/releases/${{ env.RELEASE_DIR }} /var/www/react-app/current
+            systemctl reload nginx
+            echo "Symlink apuntando a /var/www/react-app/releases/${{ env.RELEASE_DIR }}"
+

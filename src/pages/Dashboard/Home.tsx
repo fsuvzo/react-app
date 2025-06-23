@@ -1,41 +1,44 @@
-import EcommerceMetrics from "../../components/ecommerce/EcommerceMetrics";
-import MonthlySalesChart from "../../components/ecommerce/MonthlySalesChart";
-import StatisticsChart from "../../components/ecommerce/StatisticsChart";
-import MonthlyTarget from "../../components/ecommerce/MonthlyTarget";
-import RecentOrders from "../../components/ecommerce/RecentOrders";
-import DemographicCard from "../../components/ecommerce/DemographicCard";
 import PageMeta from "../../components/common/PageMeta";
+import UltimosGpsPaginados from "../../components/ecommerce/UltimosGpsPaginados";
+import ContadorClientes from "../../components/ecommerce/ContadorClientes";
+import ContadorVehiculos from "../../components/ecommerce/ContadorVehiculos";
+import ContadorTurnos from "../../components/ecommerce/ContadorTurnos";
+import ContadorExpediciones from "../../components/ecommerce/ContadorExpediciones";
+import UltimosDespachos from "../../components/ecommerce/UltimosDespachos";
+import MonitorClientes from "../../components/ecommerce/MonitorClientes";
 
 export default function Home() {
-  return (
-    <>
-      <PageMeta
-        title="React.js Ecommerce Dashboard | TailAdmin - React.js Admin Dashboard Template"
-        description="This is React.js Ecommerce Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
-      />
-      <div className="grid grid-cols-12 gap-4 md:gap-6">
-        <div className="col-span-12 space-y-6 xl:col-span-7">
-          <EcommerceMetrics />
+    return (
+        <>
+            <PageMeta title="SmartOps Dashboard" description="CVX-R" />
 
-          <MonthlySalesChart />
-        </div>
+            <div className="max-w-6xl mx-auto p-6 space-y-6">
+                {/* 1ª fila: Resumen */}
+                <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <ContadorClientes />
+                    <ContadorVehiculos />
+                    <ContadorTurnos />
+                    <ContadorExpediciones />
+                </section>
 
-        <div className="col-span-12 xl:col-span-5">
-          <MonthlyTarget />
-        </div>
+                {/* 2ª fila: Monitor de Clientes */}
+                <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div className="lg:col-span-12">
+                        <MonitorClientes />
+                    </div>
+                </section>
 
-        <div className="col-span-12">
-          <StatisticsChart />
-        </div>
 
-        <div className="col-span-12 xl:col-span-5">
-          <DemographicCard />
-        </div>
-
-        <div className="col-span-12 xl:col-span-7">
-          <RecentOrders />
-        </div>
-      </div>
-    </>
-  );
+                {/* 3ª fila: Widgets GPS + Despachos */}
+                <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div className="lg:col-span-6">
+                        <UltimosGpsPaginados className="h-[600px]" />
+                    </div>
+                    <div className="lg:col-span-6">
+                        <UltimosDespachos className="h-[600px]" />
+                    </div>
+                </section>
+            </div>
+        </>
+    );
 }

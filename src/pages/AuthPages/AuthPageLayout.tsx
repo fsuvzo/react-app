@@ -62,7 +62,7 @@ export default function AuthLayout({
                             className="flex items-center space-x-6"
                         >
                             <img
-                                src="/images/logo/simple-logo-smartops-2.svg"
+                                src="/images/logo/logo-dark.svg"
                                 alt="SmartOps Logo"
                                 className="w-74 h-auto drop-shadow-lg"
                             />
